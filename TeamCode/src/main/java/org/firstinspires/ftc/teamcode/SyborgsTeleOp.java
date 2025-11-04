@@ -109,8 +109,6 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 		fl.setDirection(DcMotorSimple.Direction.REVERSE);
 		bl.setDirection(DcMotorSimple.Direction.REVERSE);
-		fr.setDirection(DcMotorSimple.Direction.FORWARD);
-		br.setDirection(DcMotorSimple.Direction.FORWARD);
 
 		fl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 		fr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
