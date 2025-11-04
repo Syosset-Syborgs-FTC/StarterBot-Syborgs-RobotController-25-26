@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.Consumer;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.utils.TimeoutAction;
 
@@ -99,26 +100,14 @@ public class SyborgsTeleOp extends LinearOpMode {
 	private void runSetup() {
 		telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
-		fl = hardwareMap.get(DcMotor.class, "fl");
-		fr = hardwareMap.get(DcMotor.class, "fr");
-		bl = hardwareMap.get(DcMotor.class, "bl");
-		br = hardwareMap.get(DcMotor.class, "br");
-		imu = hardwareMap.get(IMU.class, "imu");
-
-		shooting = new Shooting(hardwareMap);
+		setupHardwareMap();
 
 		fl.setDirection(DcMotorSimple.Direction.REVERSE);
 		bl.setDirection(DcMotorSimple.Direction.REVERSE);
 
-		fl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-		fr.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-		bl.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-		br.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+		runForAllMotors(m -> m.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER));
 
-		fl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		fr.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		bl.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-		br.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+		runForAllMotors(m -> m.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE));
 
 		imu.initialize(new IMU.Parameters(
 				new RevHubOrientationOnRobot(
@@ -129,6 +118,16 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 		telemetry.addData("Status", "Initialized");
 		telemetry.update();
+	}
+
+	private void setupHardwareMap() {
+		fl = hardwareMap.get(DcMotor.class, "fl");
+		fr = hardwareMap.get(DcMotor.class, "fr");
+		bl = hardwareMap.get(DcMotor.class, "bl");
+		br = hardwareMap.get(DcMotor.class, "br");
+		imu = hardwareMap.get(IMU.class, "imu");
+
+		shooting = new Shooting(hardwareMap);
 	}
 
 	public void driveRobotFieldCentric() {
@@ -171,5 +170,11 @@ public class SyborgsTeleOp extends LinearOpMode {
 		fr.setPower(frPower / max);
 		bl.setPower(blPower / max);
 		br.setPower(brPower / max);
+	}
+	public void runForAllMotors(Consumer<DcMotor> c) {
+		c.accept(fl);
+		c.accept(fr);
+		c.accept(bl);
+		c.accept(br);
 	}
 }
