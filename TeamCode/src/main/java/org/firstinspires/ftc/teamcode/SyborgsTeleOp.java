@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
@@ -11,10 +12,12 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.utils.TimeoutAction;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("unused")
 @TeleOp(name = "Syborgs TeleOp", group = "Robot")
 public class SyborgsTeleOp extends LinearOpMode {
 
@@ -23,20 +26,87 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 	private DcMotor fl, fr, bl, br;
 	private IMU imu;
-	private boolean isShooting = false;
+	private Shooting shooting;
+	private Shooting.AutoFire autoFire;
 
 	@Override
-	public void runOpMode() throws InterruptedException {
-		// --- HARDWARE MAP ---
+	public void runOpMode() {
+
+		runSetup();
+		waitForStart();
+		imu.resetYaw();
+
+		autoFire = shooting.autoFireAction();
+
+		while (opModeIsActive()) {
+			TelemetryPacket packet = new TelemetryPacket();
+
+			driveRobotFieldCentric();
+
+			handleShooting();
+
+			runActions(packet);
+			autoFire.run(packet);
+
+			dash.sendTelemetryPacket(packet);
+			telemetry.addData("1. Outtake Power", "%.2f", shooting.getPower());
+			telemetry.addData("2. Velocity", "%.2f", shooting.getCurrentVelocity());
+			telemetry.addData("3. Error", "%.2f", shooting.TARGET_VELOCITY - shooting.getCurrentVelocity());
+			telemetry.addData("Heading (deg)", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
+			telemetry.update();
+		}
+	}
+
+	private void runActions(TelemetryPacket packet) {
+		List<Action> newActions = new ArrayList<>();
+		for (Action action : runningActions) {
+			action.preview(packet.fieldOverlay());
+			if (action.run(packet)) {
+				newActions.add(action);
+			}
+		}
+		runningActions.clear();
+		runningActions.addAll(newActions);
+	}
+
+	private void handleShooting() {
+		if (gamepad1.y) {
+			shooting.setTargetVelocity(640);
+		}
+		if (gamepad1.a) {
+			shooting.setTargetVelocity(2100);
+		}
+		if (gamepad1.b) {
+			shooting.setTargetVelocity(1150);
+		}
+
+		runningActions.add(shooting.updateVelocity());
+		if (gamepad1.left_bumper) {
+			if (shooting.TARGET_VELOCITY == Shooting.OUTTAKE_HOLD_POWER) {
+				shooting.setTargetVelocity(1150);
+			} else {
+				shooting.setTargetVelocity(Shooting.OUTTAKE_HOLD_POWER);
+			}
+		}
+		if (gamepad1.x) {
+			autoFire.enabled = !autoFire.enabled;
+		}
+		if (gamepad1.right_bumper && !autoFire.enabled) {
+			runningActions.add(new TimeoutAction(shooting.shoot(), 4));
+		}
+	}
+
+	private void runSetup() {
+		telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
+
 		fl = hardwareMap.get(DcMotor.class, "fl");
 		fr = hardwareMap.get(DcMotor.class, "fr");
 		bl = hardwareMap.get(DcMotor.class, "bl");
 		br = hardwareMap.get(DcMotor.class, "br");
 		imu = hardwareMap.get(IMU.class, "imu");
 
-		Shooting shooting = new Shooting(hardwareMap);
+		shooting = new Shooting(hardwareMap);
 
-		// --- DRIVE CONFIG ---
 		fl.setDirection(DcMotorSimple.Direction.REVERSE);
 		bl.setDirection(DcMotorSimple.Direction.REVERSE);
 		fr.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -61,55 +131,6 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 		telemetry.addData("Status", "Initialized");
 		telemetry.update();
-		waitForStart();
-
-		imu.resetYaw();
-
-		while (opModeIsActive()) {
-			TelemetryPacket packet = new TelemetryPacket();
-
-			driveRobotFieldCentric();
-
-			if (gamepad1.y) {
-				shooting.setTargetVelocity(640);
-			}
-			if (gamepad1.a) {
-				shooting.setTargetVelocity(2100);
-			}
-			if (gamepad1.b) {
-				shooting.setTargetVelocity(1150);
-			}
-
-			runningActions.add(shooting.updateVelocityAction());
-			if (gamepad1.left_bumper) {
-				if (shooting.TARGET_VELOCITY == Shooting.OUTTAKE_HOLD_POWER) {
-					shooting.setTargetVelocity(1150);
-				} else {
-					shooting.setTargetVelocity(Shooting.OUTTAKE_HOLD_POWER);
-				}
-			}
-			if (gamepad1.right_bumper) {
-				runningActions.add(shooting.shoot());
-			}
-
-			// update running actions
-			List<Action> newActions = new ArrayList<>();
-			for (Action action : runningActions) {
-				action.preview(packet.fieldOverlay());
-				if (action.run(packet)) {
-					newActions.add(action);
-				}
-			}
-			runningActions.clear();
-			runningActions.addAll(newActions);
-
-			dash.sendTelemetryPacket(packet);
-			telemetry.addData("1. Outtake Power", "%.2f", shooting.getPower());
-			telemetry.addData("2. Velocity", "%.2f", shooting.getCurrentVelocity());
-			telemetry.addData("3. Error", "%.2f", shooting.TARGET_VELOCITY - shooting.getCurrentVelocity());
-			telemetry.addData("Heading (deg)", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
-			telemetry.update();
-		}
 	}
 
 	public void driveRobotFieldCentric() {
