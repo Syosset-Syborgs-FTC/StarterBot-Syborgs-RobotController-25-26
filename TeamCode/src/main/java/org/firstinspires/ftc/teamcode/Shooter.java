@@ -11,7 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
-public class Shooting {
+public class Shooter {
 	private final DcMotorEx ot;
 	private final Servo lr, rr;
 
@@ -22,11 +22,14 @@ public class Shooting {
 	private static final double RIGHT_SERVO_HOME_POS = LEFT_SERVO_SET_POS;
 	private static final double RIGHT_SERVO_SET_POS = LEFT_SERVO_HOME_POS;
 
-	public Shooting(HardwareMap hardwareMap) {
+	public Shooter(HardwareMap hardwareMap) {
 		ot = hardwareMap.get(DcMotorEx.class, "ot");
 		lr = hardwareMap.get(Servo.class, "lr");
 		rr = hardwareMap.get(Servo.class, "rr");
 
+	}
+
+	public void reset() {
 		lr.setPosition(LEFT_SERVO_HOME_POS);
 		rr.setPosition(RIGHT_SERVO_HOME_POS);
 		ot.setVelocity(OUTTAKE_HOLD_POWER);
@@ -39,9 +42,11 @@ public class Shooting {
 	public double getCurrentVelocity() {
 		return ot.getVelocity();
 	}
+
 	public double getPower() {
 		return ot.getPower();
 	}
+
 	public Action updateVelocity() {
 		return t -> {
 			ot.setVelocity(TARGET_VELOCITY);
@@ -74,6 +79,7 @@ public class Shooting {
 	public class AutoFire implements Action {
 		Action shootAction = shoot();
 		public boolean enabled = false;
+
 		@Override
 		public boolean run(@NonNull TelemetryPacket t) {
 			if (!enabled) {
@@ -85,6 +91,7 @@ public class Shooting {
 			return true;
 		}
 	}
+
 	public AutoFire autoFireAction() {
 		return new AutoFire();
 	}

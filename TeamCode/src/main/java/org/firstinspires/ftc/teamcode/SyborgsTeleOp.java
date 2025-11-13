@@ -4,6 +4,7 @@ import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.acmerobotics.roadrunner.Action;
+import com.acmerobotics.roadrunner.ftc.Actions;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -27,17 +28,18 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 	private DcMotor fl, fr, bl, br;
 	private IMU imu;
-	private Shooting shooting;
-	private Shooting.AutoFire autoFire;
+	private Shooter shooter;
+	private Shooter.AutoFire autoFire;
 
 	@Override
 	public void runOpMode() {
 
 		runSetup();
+
 		waitForStart();
 		imu.resetYaw();
 
-		autoFire = shooting.autoFireAction();
+		autoFire = shooter.autoFireAction();
 
 		while (opModeIsActive()) {
 			TelemetryPacket packet = new TelemetryPacket();
@@ -50,9 +52,9 @@ public class SyborgsTeleOp extends LinearOpMode {
 			autoFire.run(packet);
 
 			dash.sendTelemetryPacket(packet);
-			telemetry.addData("1. Outtake Power", "%.2f", shooting.getPower());
-			telemetry.addData("2. Velocity", "%.2f", shooting.getCurrentVelocity());
-			telemetry.addData("3. Error", "%.2f", shooting.TARGET_VELOCITY - shooting.getCurrentVelocity());
+			telemetry.addData("1. Outtake Power", "%.2f", shooter.getPower());
+			telemetry.addData("2. Velocity", "%.2f", shooter.getCurrentVelocity());
+			telemetry.addData("3. Error", "%.2f", shooter.TARGET_VELOCITY - shooter.getCurrentVelocity());
 			telemetry.addData("Heading (deg)", imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES));
 			telemetry.update();
 		}
@@ -72,28 +74,28 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 	private void handleShooting() {
 		if (gamepad1.y) {
-			shooting.setTargetVelocity(640);
+			shooter.setTargetVelocity(640);
 		}
 		if (gamepad1.a) {
-			shooting.setTargetVelocity(2100);
+			shooter.setTargetVelocity(2100);
 		}
 		if (gamepad1.b) {
-			shooting.setTargetVelocity(1150);
+			shooter.setTargetVelocity(1150);
 		}
 
-		runningActions.add(shooting.updateVelocity());
+		runningActions.add(shooter.updateVelocity());
 		if (gamepad1.left_bumper) {
-			if (shooting.TARGET_VELOCITY == Shooting.OUTTAKE_HOLD_POWER) {
-				shooting.setTargetVelocity(1150);
+			if (shooter.TARGET_VELOCITY == Shooter.OUTTAKE_HOLD_POWER) {
+				shooter.setTargetVelocity(1150);
 			} else {
-				shooting.setTargetVelocity(Shooting.OUTTAKE_HOLD_POWER);
+				shooter.setTargetVelocity(Shooter.OUTTAKE_HOLD_POWER);
 			}
 		}
 		if (gamepad1.x) {
 			autoFire.enabled = !autoFire.enabled;
 		}
 		if (gamepad1.right_bumper && !autoFire.enabled) {
-			runningActions.add(new TimeoutAction(shooting.shoot(), 4));
+			runningActions.add(new TimeoutAction(shooter.shoot(), 4));
 		}
 	}
 
@@ -101,6 +103,8 @@ public class SyborgsTeleOp extends LinearOpMode {
 		telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
 		setupHardwareMap();
+
+		shooter.reset();
 
 		fl.setDirection(DcMotorSimple.Direction.REVERSE);
 		bl.setDirection(DcMotorSimple.Direction.REVERSE);
@@ -127,7 +131,7 @@ public class SyborgsTeleOp extends LinearOpMode {
 		br = hardwareMap.get(DcMotor.class, "br");
 		imu = hardwareMap.get(IMU.class, "imu");
 
-		shooting = new Shooting(hardwareMap);
+		shooter = new Shooter(hardwareMap);
 	}
 
 	public void driveRobotFieldCentric() {
