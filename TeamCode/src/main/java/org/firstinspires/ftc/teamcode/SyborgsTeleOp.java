@@ -74,13 +74,13 @@ public class SyborgsTeleOp extends LinearOpMode {
 
 	private void handleShooting() {
 		if (gamepad1.y) {
-			shooter.setTargetVelocity(640);
+			shooter.setTargetVelocity(Shooter.NEAR_SHOT_POWER);
 		}
 		if (gamepad1.a) {
-			shooter.setTargetVelocity(2100);
+			shooter.setTargetVelocity(Shooter.FAR_SHOT_POWER);
 		}
 		if (gamepad1.b) {
-			shooter.setTargetVelocity(1150);
+			shooter.setTargetVelocity(Shooter.NORMAL_SHOT_POWER);
 		}
 
 		runningActions.add(shooter.updateVelocity());

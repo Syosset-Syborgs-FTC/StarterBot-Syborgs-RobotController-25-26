@@ -15,7 +15,10 @@ public class Shooter {
 	private final DcMotorEx ot;
 	private final Servo lr, rr;
 
-	public static final double OUTTAKE_HOLD_POWER = 5;
+	public static final double OUTTAKE_HOLD_POWER = 0;
+	public static final double FAR_SHOT_POWER = 2100;
+	public static final double NORMAL_SHOT_POWER = 1150;
+	public static final double NEAR_SHOT_POWER = 640;
 	public double TARGET_VELOCITY = OUTTAKE_HOLD_POWER;
 	private static final double LEFT_SERVO_HOME_POS = 0.1;
 	private static final double LEFT_SERVO_SET_POS = 0.6;

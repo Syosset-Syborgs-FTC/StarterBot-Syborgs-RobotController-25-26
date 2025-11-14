@@ -1,9 +1,11 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.ParallelAction;
 import com.acmerobotics.roadrunner.Pose2d;
 import com.acmerobotics.roadrunner.RaceAction;
 import com.acmerobotics.roadrunner.SequentialAction;
+import com.acmerobotics.roadrunner.SleepAction;
 import com.acmerobotics.roadrunner.TrajectoryActionBuilder;
 import com.acmerobotics.roadrunner.Vector2d;
 import com.acmerobotics.roadrunner.ftc.Actions;
@@ -19,6 +21,7 @@ import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 import org.firstinspires.ftc.teamcode.utils.TimedPoseAverage;
+
 import java.util.List;
 import java.util.Locale;
 
@@ -28,50 +31,56 @@ public class Auton extends LinearOpMode {
 	MecanumDrive drive;
 	Shooter shooter;
 	TimedPoseAverage poseAverage = new TimedPoseAverage(0.5);
+
 	@Override
 	public void runOpMode() throws InterruptedException {
 		Pose2d initialPose = new Pose2d(60, 12, Math.toRadians(180));
 		drive = new MecanumDrive(hardwareMap, initialPose);
 		shooter = new Shooter(hardwareMap);
-		Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0,0, System.nanoTime()); // TODO: set correct camera position
+		Position cameraPosition = new Position(DistanceUnit.INCH, 0, 0, 0, System.nanoTime()); // TODO: set correct camera position
 		YawPitchRollAngles cameraOrientation = new YawPitchRollAngles(AngleUnit.DEGREES, 0, -90, 0, 0);
 
 
-		aprilTag = new AprilTagProcessor.Builder()
-				.setCameraPose(cameraPosition, cameraOrientation)
-				.build();
-
-		VisionPortal visionPortal = new VisionPortal.Builder()
-				.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-				.addProcessor(aprilTag)
-				.build();
-
+//		aprilTag = new AprilTagProcessor.Builder()
+//				.setCameraPose(cameraPosition, cameraOrientation)
+//				.build();
+//
+//		VisionPortal visionPortal = new VisionPortal.Builder()
+//				.setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+//				.addProcessor(aprilTag)
+//				.build();
+//
 		TrajectoryActionBuilder tab = drive.actionBuilder(initialPose)
 				.splineTo(new Vector2d(-48, 41), Math.toRadians(128));
 		shooter.reset();
 
 		while (opModeInInit()) {
-			relocalizeFromAprilTag();
-			telemetryAprilTag();
+//			relocalizeFromAprilTag();
+//			telemetryAprilTag();
 
 			telemetry.addData("Current Pose", drive.localizer.getPose());
 			telemetry.update();
 		}
 		waitForStart();
-		Actions.runBlocking(new RaceAction(
+		shooter.setTargetVelocity(Shooter.NORMAL_SHOT_POWER);
+		Actions.runBlocking(
+			new RaceAction(
 				new SequentialAction(
-						tab.build(),
-						shooter.shoot(),
-						shooter.shoot(),
-						shooter.shoot()
+					tab.build(),
+					new SleepAction(0.5),
+					shooter.shoot(),
+					new SleepAction(0.3),
+					shooter.shoot(),
+					shooter.shoot()
 				),
 				t -> {
 					shooter.updateVelocity().run(t);
 					return true; // this action will never complete, so the race ends when the trajectory ends
 				}
-		));
-
+			)
+		);
 	}
+
 	private void relocalizeFromAprilTag() {
 		List<AprilTagDetection> detections = aprilTag.getFreshDetections();
 		if (detections == null || detections.isEmpty()) {
@@ -92,6 +101,7 @@ public class Auton extends LinearOpMode {
 		});
 
 	}
+
 	private void telemetryAprilTag() {
 		List<AprilTagDetection> currentDetections = aprilTag.getDetections();
 		telemetry.addData("# AprilTags Detected", currentDetections.size());
