@@ -7,8 +7,10 @@ import com.acmerobotics.roadrunner.Action;
 import com.acmerobotics.roadrunner.InstantAction;
 import com.acmerobotics.roadrunner.SequentialAction;
 import com.acmerobotics.roadrunner.SleepAction;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 public class Shooter {
@@ -29,7 +31,7 @@ public class Shooter {
 		ot = hardwareMap.get(DcMotorEx.class, "ot");
 		lr = hardwareMap.get(Servo.class, "lr");
 		rr = hardwareMap.get(Servo.class, "rr");
-
+		ot.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 7, 5, 0));
 	}
 
 	public void reset() {
