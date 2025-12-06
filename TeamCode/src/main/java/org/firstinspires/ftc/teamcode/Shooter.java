@@ -61,7 +61,7 @@ public class Shooter {
 			}
 			if (Math.abs(ot.getVelocity() - TARGET_VELOCITY) > 20 || TARGET_VELOCITY == OUTTAKE_HOLD_POWER) {
 				// led red
-				led.setPosition(0.3);
+				led.setPosition(0.279);
 			} else {
 				// led green
 				led.setPosition(0.5);
