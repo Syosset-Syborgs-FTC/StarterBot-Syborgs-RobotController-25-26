@@ -15,7 +15,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 
 public class Shooter {
 	private final DcMotorEx ot;
-	private final Servo lr, rr;
+	private final Servo lr, rr, led;
 
 	public static final double OUTTAKE_HOLD_POWER = 0;
 	public static final double FAR_SHOT_POWER = 2100;
@@ -31,6 +31,7 @@ public class Shooter {
 		ot = hardwareMap.get(DcMotorEx.class, "ot");
 		lr = hardwareMap.get(Servo.class, "lr");
 		rr = hardwareMap.get(Servo.class, "rr");
+		led = hardwareMap.get(Servo.class, "led");
 		ot.setPIDFCoefficients(DcMotor.RunMode.RUN_USING_ENCODER, new PIDFCoefficients(100, 7, 5, 0));
 	}
 
@@ -57,6 +58,13 @@ public class Shooter {
 			ot.setVelocity(TARGET_VELOCITY);
 			if (ot.isOverCurrent()) {
 				t.addLine("WARNING: Motor is over current! Please reduce power to prevent overheating.");
+			}
+			if (Math.abs(ot.getVelocity() - TARGET_VELOCITY) > 20 || TARGET_VELOCITY == OUTTAKE_HOLD_POWER) {
+				// led red
+				led.setPosition(0.277);
+			} else {
+				// led green
+				led.setPosition(0.5);
 			}
 			return false;
 		};
