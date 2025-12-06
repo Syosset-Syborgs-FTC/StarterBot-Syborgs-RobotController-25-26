@@ -18,7 +18,7 @@ public class Shooter {
 	private final Servo lr, rr, led;
 
 	public static final double OUTTAKE_HOLD_POWER = 0;
-	public static final double FAR_SHOT_POWER = 2100;
+	public static final double FAR_SHOT_POWER = 1650;
 	public static final double NORMAL_SHOT_POWER = 1150;
 	public static final double NEAR_SHOT_POWER = 640;
 	public double TARGET_VELOCITY = OUTTAKE_HOLD_POWER;

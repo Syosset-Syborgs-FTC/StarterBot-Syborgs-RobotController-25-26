@@ -84,7 +84,7 @@ public class SyborgsTeleOp extends LinearOpMode {
 		}
 
 		runningActions.add(shooter.updateVelocity());
-		if (gamepad1.left_bumper) {
+		if (gamepad1.leftBumperWasPressed()) {
 			if (shooter.TARGET_VELOCITY == Shooter.OUTTAKE_HOLD_POWER) {
 				shooter.setTargetVelocity(1150);
 			} else {
