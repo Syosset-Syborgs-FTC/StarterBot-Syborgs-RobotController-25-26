@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.IMU;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 
 import org.firstinspires.ftc.robotcore.external.Consumer;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
@@ -30,11 +31,16 @@ public class SyborgsTeleOp extends LinearOpMode {
 	private IMU imu;
 	private Shooter shooter;
 	private Shooter.AutoFire autoFire;
+	private ColorSensor color;
 
 	@Override
 	public void runOpMode() {
 
 		runSetup();
+
+		color = hardwareMap.get(ColorSensor.class, "color");
+
+		float [] hsv = new float [3];
 
 		waitForStart();
 		imu.resetYaw();
@@ -42,6 +48,30 @@ public class SyborgsTeleOp extends LinearOpMode {
 		autoFire = shooter.autoFireAction();
 
 		while (opModeIsActive()) {
+
+			int argb = color.argb();
+			android.graphics.Color.colorToHSV(argb, hsv);
+
+			float hue = hsv [0];
+
+			boolean isPurple = (hue >= 260 && hue <= 300);
+			boolean isGreen = (hue >= 90 && hue <= 160);
+
+			telemetry.addData ("Red", color.red());
+			telemetry.addData("Green", color.green());
+			telemetry.addData("Blue", color.blue());
+			telemetry.addData("Hue", hue);
+
+			if (isPurple)
+			{
+				telemetry.addLine("Purple detected");
+			}
+
+			else if (isGreen)
+			{
+				telemetry.addLine("Green detected");
+			}
+
 			TelemetryPacket packet = new TelemetryPacket();
 
 			driveRobotFieldCentric();
